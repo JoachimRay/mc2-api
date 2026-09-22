@@ -1,4 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a Next.js API for the Expo client.
+
+## API
+
+Available endpoints:
+
+- `GET /api/rows`
+- `GET /api/customers`
+- `GET /api/customers/:id`
+
+For Expo on a physical device, use the computer's local network address, not
+`localhost`:
+
+```ts
+const API_URL = "http://192.168.86.220:3000";
+const response = await fetch(`${API_URL}/api/rows`);
+const rows = await response.json();
+```
+
+Replace the example IP with the address printed by `npm run start` or `npm run dev`.
+When deployed, use the Vercel URL as `API_URL` instead.
 
 ## Getting Started
 
