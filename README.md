@@ -4,9 +4,21 @@ This is a Next.js API for the Expo client.
 
 Available endpoints:
 
-- `GET /api/rows`
-- `GET /api/customers`
-- `GET /api/customers/:id`
+- `GET /api/me` (signed in)
+- `GET /api/rows` (legacy alias for signed-in customers)
+- `GET /api/customers` (signed in)
+- `POST /api/customers` (admin)
+- `GET /api/customers/:id` (signed in)
+- `GET /api/customers/:id/entries` (signed in)
+- `POST /api/customers/:id/entries` (admin)
+
+The phone app sends `Authorization: Bearer <Supabase access token>`. The API verifies the token with Supabase and reads the caller's role from `profiles`; each write checks that role on the server. Customer entries use `{ kind: "due" | "payment", amount }`. Amounts must be positive, and a payment cannot exceed the current balance. The entry insert and balance update run in one database transaction.
+
+## Database setup
+
+Set `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env`. `DATABASE_URL` must be a server-only Postgres connection string. Never put a database password or Supabase service-role key in an `NEXT_PUBLIC_` variable or in the Expo app.
+
+Apply the tracked entries migration with `npm exec drizzle-kit migrate`. The existing `customers` and `profiles` tables must already be present. Set the admin user's `profiles.role` to `admin` in a trusted database session; new profiles default to `client`.
 
 For Expo on a physical device, use the computer's local network address, not
 `localhost`:

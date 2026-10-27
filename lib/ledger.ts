@@ -1,6 +1,8 @@
-import type { Customer } from "@/app/api/rows";
-
-export type LedgerAccount = Customer & {
+export type LedgerAccount = {
+  id: string;
+  name: string;
+  balance: number;
+  lastPaid: string;
   slug: string;
   title: string;
   year: string;
@@ -9,10 +11,11 @@ export type LedgerAccount = Customer & {
 
 export type Project = LedgerAccount;
 
-export function formatCurrency(value: number): string {
+export function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
     currency: "PHP",
     minimumFractionDigits: 2,
-  }).format(value);
+    maximumFractionDigits: 2,
+  }).format(amount);
 }

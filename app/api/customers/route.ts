@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getProfile } from "@/lib/auth";
 import { db } from "@/db";
-import { customers } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { customers, entries } from "@/db/schema";
+import { asc } from "drizzle-orm";
 import { CustomerSchema } from "@/lib/definitions";
 
 const corsHeaders = {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 		);
 	}
 
-	const rows = await db.select().from(customers).orderBy(desc(customers.id));
+	const rows = await db.select().from(customers).orderBy(asc(customers.name));
 	return NextResponse.json(
 		rows.map((row) => ({ ...row, balance: Number(row.balance), lastPaid: row.lastPaid })),
 		{ headers: corsHeaders },
@@ -63,7 +63,16 @@ export async function POST(request: Request) {
 			lastPaid: parsed.data.lastPaid,
 		};
 
-		await db.insert(customers).values(customer);
+		await db.transaction(async (tx) => {
+			await tx.insert(customers).values(customer);
+			if (parsed.data.balance > 0) {
+				await tx.insert(entries).values({
+					customerId: customer.id,
+					kind: "due",
+					amount: parsed.data.balance,
+				});
+			}
+		});
 
 		return NextResponse.json(
 			{ ...customer, balance: parsed.data.balance },

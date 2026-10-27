@@ -1,16 +1,2 @@
-import { NextResponse } from "next/server";
-import { ROWS } from "../rows";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
-
-export function GET() {
-  return NextResponse.json(ROWS, { headers: corsHeaders });
-}
-
-export function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders });
-}
+// Keep the legacy URL, but apply the same authentication and role policy.
+export { GET, OPTIONS } from "../customers/route";

@@ -13,5 +13,11 @@ export const CredentialsSchema = z.object({
 
 export const EntrySchema = z.object({
   kind: z.enum(["due", "payment"], { error: "Choose a due or a payment." }),
-  amount: z.coerce.number({ error: "Enter the amount as a number." }).positive({ error: "The amount must be more than zero." }),
+  amount: z.coerce
+    .number({ error: "Enter the amount as a number." })
+    .positive({ error: "The amount must be more than zero." })
+    .max(99_999_999.99, { error: "The amount is too large." })
+    .refine((value) => Math.abs(value * 100 - Math.round(value * 100)) < 1e-8, {
+      error: "Use no more than two decimal places.",
+    }),
 });
