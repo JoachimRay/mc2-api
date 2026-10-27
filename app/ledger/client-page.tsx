@@ -12,6 +12,7 @@ export function ClientLedgerPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [problem, setProblem] = useState("");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -26,7 +27,11 @@ export function ClientLedgerPage() {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });
-        if (!response.ok) throw new Error(response.status === 401 ? "Your session expired. Sign in again." : "Unable to load customer accounts.");
+        if (!response.ok) {
+          const details = await response.json().catch(() => ({})) as { error?: string };
+          if (response.status === 401) throw new Error("Your session expired. Sign in again.");
+          throw new Error(details.error ?? `Unable to load customer accounts (HTTP ${response.status}).`);
+        }
 
         const customers = (await response.json()) as Customer[];
         if (!active) return;
@@ -49,7 +54,7 @@ export function ClientLedgerPage() {
 
     void load();
     return () => { active = false; };
-  }, []);
+  }, [attempt]);
 
   const outstanding = projects.reduce((total, project) => total + project.balance, 0);
   const paidAccounts = projects.filter((project) => project.balance === 0).length;
@@ -63,7 +68,12 @@ export function ClientLedgerPage() {
           <p className="mt-3 text-zinc-400">Track tenant balances and payment activity in one place.</p>
         </div>
       </section>
-      {problem && <p className="mt-8 text-sm text-red-400" role="alert">{problem}</p>}
+      {problem && (
+        <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-red-400" role="alert">
+          <p>{problem}</p>
+          <button type="button" onClick={() => { setLoading(true); setAttempt((value) => value + 1); }} className="underline underline-offset-4">Try again</button>
+        </div>
+      )}
       {loading ? <p className="py-12 text-sm text-zinc-400">Loading accounts...</p> : (
         <>
           <section className="my-10 grid gap-6 md:my-14 md:grid-cols-3" aria-label="Ledger summary">

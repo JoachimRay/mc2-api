@@ -12,7 +12,16 @@ const corsHeaders = {
 };
 
 export async function GET(request: Request) {
-	const profile = await getProfile(request);
+	let profile;
+	try {
+		profile = await getProfile(request);
+	} catch (error) {
+		console.error("GET /api/customers profile lookup failed", error);
+		return NextResponse.json(
+			{ error: "The API could not load your profile from the database." },
+			{ status: 503, headers: corsHeaders },
+		);
+	}
 
 	if (!profile) {
 		return NextResponse.json(
@@ -21,11 +30,19 @@ export async function GET(request: Request) {
 		);
 	}
 
-	const rows = await db.select().from(customers).orderBy(asc(customers.name));
-	return NextResponse.json(
-		rows.map((row) => ({ ...row, balance: Number(row.balance), lastPaid: row.lastPaid })),
-		{ headers: corsHeaders },
-	);
+	try {
+		const rows = await db.select().from(customers).orderBy(asc(customers.name));
+		return NextResponse.json(
+			rows.map((row) => ({ ...row, balance: Number(row.balance), lastPaid: row.lastPaid })),
+			{ headers: corsHeaders },
+		);
+	} catch (error) {
+		console.error("GET /api/customers database query failed", error);
+		return NextResponse.json(
+			{ error: "The customer database could not be reached or queried." },
+			{ status: 503, headers: corsHeaders },
+		);
+	}
 }
 
 export async function POST(request: Request) {
